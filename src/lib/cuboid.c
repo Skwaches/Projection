@@ -15,6 +15,15 @@ void vertexes(Vector3 vertices[CUBOID_VERTICES], Vector3 bak, Vector3 dimensions
 	vertices[7] = (Vector3){bak.x + dimensions.x, bak.y,				bak.z + dimensions.z};
 }
 
+//Returns the center of the cube provided 
+Vector3 centerCuboid(Cuboid cube){
+	Vector3 center = { 
+	(cube.vertices[6].x + cube.vertices[0].x)/2 , 
+	(cube.vertices[6].y + cube.vertices[0].y)/2 ,
+	(cube.vertices[6].z + cube.vertices[0].z)/2 , 
+		};
+	return center;
+}
 // Returns the path needed to follow in order to render a cuboid.
 // FIXME This path may not be optimal. Switching to edges may be smarter. Do this!
 void linePath(Vector3 path[CUBOID_PATH],Vector3 vertices[CUBOID_VERTICES]){
@@ -38,6 +47,7 @@ void linePath(Vector3 path[CUBOID_PATH],Vector3 vertices[CUBOID_VERTICES]){
 
 void updateCuboid(Cuboid* cube){
 	linePath(cube->path, cube->vertices);
+	cube->center = centerCuboid(*cube);
 	for(int i = 0; i < CUBOID_PATH; i++){
 		SDL_FPoint projected = projection(cube->path[i]);
 		cube->projection[i] = convertScreen(projected);

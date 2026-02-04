@@ -15,6 +15,7 @@ typedef struct Cuboid {
 	//These are the created by functions
 	Vector3 vertices[CUBOID_VERTICES];
 	Vector3 path[CUBOID_PATH];
+	Vector3 center;
 
 	//This is the projection of the path in screen coordinates
 	SDL_FPoint projection[CUBOID_PATH];

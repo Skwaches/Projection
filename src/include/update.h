@@ -11,4 +11,5 @@ float timer(void);
 void update(void);
 void initCuboid(Cuboid* cube);
 void updateCuboid(Cuboid* cube);
+Vector3 centerCuboid(Cuboid cube);
 #endif

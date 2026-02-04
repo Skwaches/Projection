@@ -14,7 +14,7 @@ SDL_Color lineColor = {230, 77, 228, SDL_ALPHA_OPAQUE};
 //Planes are xy, xz and zy
 //Note 1 = /180 radians
 #define DEGREE SDL_PI_D/180 
-Vector3 ANGULAR_VELOCITY = {DEGREE * 30, DEGREE*30, DEGREE*30};
+Vector3 ANGULAR_VELOCITY = {DEGREE * 90, DEGREE*90, DEGREE*90};
 
 // Speed is in pixels per second
 Vector3 LINEAR_SPEED = { 9, 9, 9};

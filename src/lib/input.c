@@ -41,6 +41,9 @@ void handleKeyDown(SDL_Keycode key){
 		case SDLK_W:
 			w_KEY = true;
 			break;
+		case SDLK_ESCAPE:
+			running = false;
+			break;
 		default:
 			break;
 	}

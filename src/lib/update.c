@@ -8,47 +8,48 @@ Vector3 translate(Vector3 point, Vector3 translation){
 	};
 }
 
-//Returns the rotation of a point.
+//Returns the rotation of a point about another (origin).
 //Matrix of rotation is:
 // 		cos Θ 	-sin Θ
 // 		sin Θ 	cos Θ
 //FIXME Consider writing a function for matrix multiplication.
 //This will make it easier to implement other, more complex, transforms
-SDL_FPoint rotate2(SDL_FPoint point, double angle){
+SDL_FPoint rotate2(SDL_FPoint point, SDL_FPoint origin, double angle){
 	float sin,cosine;
 	SDL_FPoint rotated;
 	
-	//xy rotation (z is constant)
 	sin = SDL_sinf(angle);
 	cosine = SDL_cosf(angle);
-	rotated.x = point.x*cosine - point.y*sin;
-	rotated.y = point.x*sin + point.y*cosine;
+	SDL_FPoint local = {point.x -origin.x, point.y - origin.y};
+	rotated.x = local.x * cosine - local.y *sin + origin.x;
+	rotated.y = local.x * sin + local.y*cosine + origin.y;
 	return rotated;
 }
 
-//Planes are xy, xz and zy
-//FIXME Splitting rotation for each plane may be cleaner.
-//Doesn't bother me either way
-Vector3 rotate3(Vector3 point, Vector3 angle){
-	SDL_FPoint focusPoint, transform;
+//Planes are xy, xz and zy FIXME Splitting rotation for each plane may be cleaner. Doesn't bother me either way
+Vector3 rotate3(Vector3 point, Vector3 angle, Vector3 origin){
+	SDL_FPoint focusPoint, transform, focusOrigin;
 	double focusAngle;
 
 	//Along xy plane (z remains constant)
 	focusPoint = (SDL_FPoint){point.x, point.y};
+	focusOrigin = (SDL_FPoint){origin.x, origin.y};
 	focusAngle = angle.x;
-	transform = rotate2(focusPoint, focusAngle);
+	transform = rotate2(focusPoint, focusOrigin, focusAngle);
 	point = (Vector3){ transform.x, transform.y, point.z};
 
 	//Along xz plane (y remains constant)
 	focusPoint = (SDL_FPoint){point.x, point.z};
+	focusOrigin = (SDL_FPoint){origin.x, origin.z};
 	focusAngle = angle.y;
-	transform = rotate2(focusPoint, focusAngle);
+	transform = rotate2(focusPoint, focusOrigin, focusAngle);
 	point = (Vector3){ transform.x, point.y, transform.y};
 
 	//Along zy plane (x remains constant)
 	focusPoint = (SDL_FPoint){point.z, point.y};
+	focusOrigin = (SDL_FPoint){origin.z, origin.y};
 	focusAngle = angle.z;
-	transform = rotate2(focusPoint, focusAngle);
+	transform = rotate2(focusPoint, focusOrigin, focusAngle);
 	point = (Vector3){ point.x, transform.y, transform.x};
 
 	return point;
@@ -80,28 +81,28 @@ float timer(){
 void update(){
 	if(LIMIT_FPS)
 		SDL_Delay(WAIT_TIME);
-	float 𝚫time = timer();
+	float 𝚫time = timer()/1000.0;
 	SDL_GetWindowSize(window, &WINDOW_SIZE.x, &WINDOW_SIZE.y);
+	int direction = lShift_KEY ? 1: -1;
 
-	int direction = lShift_KEY ? -1: 1;
 	Vector3 angle = { 
-		//Reverse when shift.
-		ANGULAR_VELOCITY.x * 𝚫time/1000 * (int)(h_KEY)* direction, 
-		ANGULAR_VELOCITY.y * 𝚫time/1000 * (int)(j_KEY)* direction, 
-		ANGULAR_VELOCITY.z * 𝚫time/1000 * (int)(k_KEY)* direction
+		ANGULAR_VELOCITY.x * 𝚫time * direction * h_KEY,
+		ANGULAR_VELOCITY.y * 𝚫time * direction * j_KEY,
+		ANGULAR_VELOCITY.z * 𝚫time * direction * k_KEY,
 	};
 
 	Vector3 translation = {
-		LINEAR_SPEED.x * 𝚫time/1000 * a_KEY,
-		LINEAR_SPEED.y * 𝚫time/1000 * s_KEY * direction,
-		LINEAR_SPEED.z * 𝚫time/1000 * w_KEY * direction
+		LINEAR_SPEED.x * 𝚫time * a_KEY * direction,
+		LINEAR_SPEED.y * 𝚫time * w_KEY * direction,
+		LINEAR_SPEED.z * 𝚫time * s_KEY * direction,
 	};
 
 	for(int i = 0; i < CUBOID_VERTICES; i++){
-		testCUBOID.vertices[i] = rotate3(testCUBOID.vertices[i], angle);
+		testCUBOID.vertices[i] = rotate3(testCUBOID.vertices[i], angle, testCUBOID.center);
 		testCUBOID.vertices[i] = translate(testCUBOID.vertices[i], translation);
 		updateCuboid(&testCUBOID);
 	}
+
 	return;
 }
 
