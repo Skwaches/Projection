@@ -1,7 +1,9 @@
 #include "update.h"
 
+// Implementing switching to triangles 
 // Creates the front and back faces of a cube when given the "back-left" point 
-void vertexes(Vector3 vertices[CUBOID_VERTICES], Vector3 bak, Vector3 dimensions){
+// Anti-clockwise back then front. Starts from top-left
+void vertexes(Vector3 vertices[CUBOID_VERTICES_NO], Vector3 bak, Vector3 dimensions){
 	//Back Face
 	vertices[0] = bak;
 	vertices[1] = (Vector3){bak.x, 				  bak.y - dimensions.y, bak.z};
@@ -24,32 +26,11 @@ Vector3 centerCuboid(Cuboid cube){
 		};
 	return center;
 }
-// Returns the path needed to follow in order to render a cuboid.
-// FIXME This path may not be optimal. Switching to edges may be smarter. Do this!
-void linePath(Vector3 path[CUBOID_PATH],Vector3 vertices[CUBOID_VERTICES]){
-	int indexer = 0;
-
-	for(int i = 0; i < 4; i++)
-		path[indexer++] = vertices[i];
-	path[indexer++] = vertices[0];
-
-	for(int i = 4; i < 8; i++)
-		path[indexer++] = vertices[i];
-	path[indexer++] = vertices[4];
-
-	path[indexer++] = vertices[7];
-	path[indexer++] = vertices[3];
-	path[indexer++] = vertices[2];
-	path[indexer++] = vertices[6];
-	path[indexer++] = vertices[5];
-	path[indexer]   = vertices[1];
-}
 
 void updateCuboid(Cuboid* cube){
-	linePath(cube->path, cube->vertices);
 	cube->center = centerCuboid(*cube);
-	for(int i = 0; i < CUBOID_PATH; i++){
-		SDL_FPoint projected = projection(cube->path[i]);
+	for(int i = 0; i < CUBOID_VERTICES_NO; i++){
+		SDL_FPoint projected = projection(cube->vertices[i]);
 		cube->projection[i] = convertScreen(projected);
 	}
 }

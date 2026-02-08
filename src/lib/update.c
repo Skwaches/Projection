@@ -1,13 +1,22 @@
 #include "update.h"
 
-Vector3 translate(Vector3 point, Vector3 translation){
+Vector3 translate3(Vector3 point, Vector3 translation){
 	return (Vector3){
 		point.x + translation.x, 
 		point.y + translation.y,
 		point.z + translation.z
 	};
 }
+SDL_FPoint translate2(SDL_FPoint point, SDL_FPoint translation){
+	return (SDL_FPoint){
+		point.x + translation.x, 
+		point.y + translation.y,
+	};
+}
 
+SDL_FPoint scale2(SDL_FPoint point, float factor){
+	return (SDL_FPoint){point.x * factor, point.y * factor};
+}
 //Returns the rotation of a point about another (origin).
 //Matrix of rotation is:
 // 		cos Θ 	-sin Θ
@@ -26,7 +35,8 @@ SDL_FPoint rotate2(SDL_FPoint point, SDL_FPoint origin, double angle){
 	return rotated;
 }
 
-//Planes are xy, xz and zy FIXME Splitting rotation for each plane may be cleaner. Doesn't bother me either way
+//Planes are xy, xz and zy 
+//FIXME Splitting rotation for each plane may be cleaner. Doesn't bother me either way
 Vector3 rotate3(Vector3 point, Vector3 angle, Vector3 origin){
 	SDL_FPoint focusPoint, transform, focusOrigin;
 	double focusAngle;
@@ -40,8 +50,7 @@ Vector3 rotate3(Vector3 point, Vector3 angle, Vector3 origin){
 
 	//Along xz plane (y remains constant)
 	focusPoint = (SDL_FPoint){point.x, point.z};
-	focusOrigin = (SDL_FPoint){origin.x, origin.z};
-	focusAngle = angle.y;
+	focusOrigin = (SDL_FPoint){origin.x, origin.z}; focusAngle = angle.y;
 	transform = rotate2(focusPoint, focusOrigin, focusAngle);
 	point = (Vector3){ transform.x, point.y, transform.y};
 
@@ -84,11 +93,12 @@ void update(){
 	float 𝚫time = timer()/1000.0;
 	SDL_GetWindowSize(window, &WINDOW_SIZE.x, &WINDOW_SIZE.y);
 	int direction = lShift_KEY ? 1: -1;
+	
 
 	Vector3 angle = { 
-		ANGULAR_VELOCITY.x * 𝚫time * direction * h_KEY,
-		ANGULAR_VELOCITY.y * 𝚫time * direction * j_KEY,
-		ANGULAR_VELOCITY.z * 𝚫time * direction * k_KEY,
+		ANGULAR_VELOCITY.x* 𝚫time* h_KEY* direction,
+		ANGULAR_VELOCITY.y* 𝚫time* j_KEY* direction,
+		ANGULAR_VELOCITY.z* 𝚫time* k_KEY* direction,
 	};
 
 	Vector3 translation = {
@@ -97,9 +107,9 @@ void update(){
 		LINEAR_SPEED.z * 𝚫time * s_KEY * direction,
 	};
 
-	for(int i = 0; i < CUBOID_VERTICES; i++){
+	for(int i = 0; i < CUBOID_VERTICES_NO; i++){
 		testCUBOID.vertices[i] = rotate3(testCUBOID.vertices[i], angle, testCUBOID.center);
-		testCUBOID.vertices[i] = translate(testCUBOID.vertices[i], translation);
+		testCUBOID.vertices[i] = translate3(testCUBOID.vertices[i], translation);
 		updateCuboid(&testCUBOID);
 	}
 
