@@ -44,8 +44,16 @@ bool render(){
 	if(!SDL_RenderClear(renderer))
 		return false;
 
-	renderCuboidEdges(testCUBOID.projection);
-	renderCuboidFaces(testCUBOID.projection, (SDL_FColor){0.8, 0.4, 0.3, 1});
+	setColor(lineColor);
+
+	//renderCuboidEdges(testCUBOID.projection);
+	//renderCuboidFaces(testCUBOID.projection, (SDL_FColor){0.8, 0.4, 0.3, 1});
+	//SDL_RenderLines(renderer, testCIRCLE.projection, testCIRCLE.accuracy);
+	//
+	SDL_FPoint center = convertScreen(projection(testSPHERE.center));
+	for( int i = 0; i < testSPHERE.accuracy.x; i++){
+		SDL_RenderPoints(renderer, testSPHERE.circles[i].projection, testSPHERE.accuracy.y);
+	}
 
 	if(!SDL_RenderPresent(renderer))
 		return false;

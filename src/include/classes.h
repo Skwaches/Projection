@@ -45,6 +45,20 @@ typedef struct Cuboid {
 
 }Cuboid;
 
+typedef struct Circle{
+	float radius;
+	int accuracy;//number of points to use;
+	Vector3 center, *points;
+	SDL_FPoint* projection;
+}Circle;
+
+typedef struct Sphere{
+	Circle* circles;
+	SDL_Point accuracy; //Number of circles, Number of points on each circle
+	float radius;
+	Vector3 center;
+}Sphere;
+
 typedef struct Line{
 	//The points to join
 	SDL_FPoint a,b;
@@ -53,5 +67,5 @@ typedef struct Line{
 	//The thickness of the line
 	float thickness;
 	SDL_Vertex vertexes[4];
-
 }Line;
+

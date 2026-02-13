@@ -17,13 +17,18 @@ SDL_FPoint translate2(SDL_FPoint point, SDL_FPoint translation){
 SDL_FPoint scale2(SDL_FPoint point, float factor){
 	return (SDL_FPoint){point.x * factor, point.y * factor};
 }
+
+Vector3 scale3(Vector3 point, float factor){
+	return (Vector3){point.x * factor, point.y * factor, point.z * factor};
+}
+
 //Returns the rotation of a point about another (origin).
 //Matrix of rotation is:
 // 		cos Θ 	-sin Θ
 // 		sin Θ 	cos Θ
 //FIXME Consider writing a function for matrix multiplication.
 //This will make it easier to implement other, more complex, transforms
-SDL_FPoint rotate2(SDL_FPoint point, SDL_FPoint origin, double angle){
+SDL_FPoint rotate2(SDL_FPoint point, SDL_FPoint origin, float angle){
 	float sin,cosine;
 	SDL_FPoint rotated;
 	
@@ -35,9 +40,16 @@ SDL_FPoint rotate2(SDL_FPoint point, SDL_FPoint origin, double angle){
 	return rotated;
 }
 
+//Rotate a point about an axis
+//Axis is defined by a vector and a point(mark) through which it passes through
+Vector3 rotateAxis3(Vector3 point, Vector3 line, Vector3 mark, float angle){
+	Vector3 meet; //Meeting point of axis and a line perpendicular to it passing through "point"
+	return mark;
+}
+
 //Planes are xy, xz and zy 
 //FIXME Splitting rotation for each plane may be cleaner. Doesn't bother me either way
-Vector3 rotate3(Vector3 point, Vector3 angle, Vector3 origin){
+Vector3 rotate3(Vector3 point, Vector3 origin, Vector3 angle){
 	SDL_FPoint focusPoint, transform, focusOrigin;
 	double focusAngle;
 
@@ -107,12 +119,14 @@ void update(){
 		LINEAR_SPEED.z * 𝚫time * s_KEY * direction,
 	};
 
-	for(int i = 0; i < CUBOID_VERTICES_NO; i++){
-		testCUBOID.vertices[i] = rotate3(testCUBOID.vertices[i], angle, testCUBOID.center);
-		testCUBOID.vertices[i] = translate3(testCUBOID.vertices[i], translation);
-		updateCuboid(&testCUBOID);
+	testSPHERE.center = translate3(testSPHERE.center, translation);
+	for(int i = 0;i<testSPHERE.accuracy.x; i++){
+		for(int k = 0; k < testSPHERE.accuracy.y; k++){
+			testSPHERE.circles[i].points[k] = rotate3(testSPHERE.circles[i].points[k], testSPHERE.center ,angle);
+			testSPHERE.circles[i].points[k] = translate3(testSPHERE.circles[i].points[k] , translation);
+		}
 	}
-
+	updateSphere(&testSPHERE);
 	return;
 }
 

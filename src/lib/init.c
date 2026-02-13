@@ -14,6 +14,7 @@ bool init(void){
 }
 
 void quit(){
+	frameLast();
 	SDL_DestroyWindow(window);
 	SDL_DestroyRenderer(renderer);
 	SDL_Quit();

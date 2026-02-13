@@ -21,6 +21,7 @@ extern SDL_Color lineColor;
 bool init(void);
 void quit(void);
 void frameOne(void);
+void frameLast(void);
 
 //Rendering
 bool render(void);
@@ -33,6 +34,8 @@ a_KEY, w_KEY, s_KEY, d_KEY,
 lShift_KEY;
 
 extern Cuboid testCUBOID;
+extern Circle testCIRCLE;
+extern Sphere testSPHERE;
 
 //Speed
 extern Vector3 ANGULAR_VELOCITY;

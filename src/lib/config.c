@@ -1,10 +1,11 @@
 #include "update.h"
 
+
 bool LIMIT_FPS = false;
 #define FPS 200
 float WAIT_TIME = 1000.0/FPS;
 
-SDL_Point WINDOW_SIZE = {2560, 1440};
+SDL_Point WINDOW_SIZE = {1920, 1080};
 SDL_Color BACKGROUND = {0, 0 , 0, SDL_ALPHA_OPAQUE};
 SDL_WindowFlags WINDOW_FLAGS = SDL_WINDOW_FULLSCREEN;
 const char* WINDOW_TITLE = "Cartesian";
@@ -25,9 +26,28 @@ Cuboid testCUBOID = {
 	.dimensions = {3, 3, 3} 
 };
 
+Circle testCIRCLE = {
+	.center = { 0, 0, 20},
+	.accuracy = 1000,
+	.radius = 5
+};
+
+Sphere testSPHERE = {
+	.center = {0, 0, 20},
+	.accuracy = {10, 500},
+	.radius = 3
+};
+
 void frameOne(void){
 	//This initialises all the other values
 	//It is called with the init function.
 	initCuboid(&testCUBOID);
+	initCircle(&testCIRCLE);
+	initSphere(&testSPHERE);
 }
 
+void frameLast(void){
+	SDL_free(testCIRCLE.points);
+	SDL_free(testCIRCLE.projection);
+	destroySphere(&testSPHERE);
+}
