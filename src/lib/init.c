@@ -1,6 +1,6 @@
 #include "init.h"
 
-bool running = false;
+bool RUNNING = false;
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
 

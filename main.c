@@ -3,8 +3,8 @@
 
 
 int main(int argc, char** argv){
-	running = init();
-	while(running){
+	RUNNING = init();
+	while(RUNNING){
 		input();
 		update();
 		render();

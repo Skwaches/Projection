@@ -7,7 +7,7 @@
 extern bool LIMIT_FPS;
 extern float WAIT_TIME;
 
-extern bool running;
+extern bool RUNNING;
 extern SDL_Window* window;
 extern SDL_Renderer* renderer;
 extern SDL_Point WINDOW_SIZE; 

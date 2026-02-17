@@ -42,7 +42,7 @@ void handleKeyDown(SDL_Keycode key){
 			w_KEY = true;
 			break;
 		case SDLK_ESCAPE:
-			running = false;
+			RUNNING = false;
 			break;
 		default:
 			break;
@@ -87,7 +87,7 @@ void input(void){
 	while(SDL_PollEvent(&event)){
 		switch(event.type){
 			case SDL_EVENT_QUIT:
-				running = false;
+				RUNNING = false;
 				break;
 			case SDL_EVENT_KEY_DOWN:
 				handleKeyDown(event.key.key);

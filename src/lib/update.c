@@ -105,7 +105,6 @@ void update(){
 	float 𝚫time = timer()/1000.0;
 	SDL_GetWindowSize(window, &WINDOW_SIZE.x, &WINDOW_SIZE.y);
 	int direction = lShift_KEY ? 1: -1;
-	
 
 	Vector3 angle = { 
 		ANGULAR_VELOCITY.x* 𝚫time* h_KEY* direction,
@@ -118,15 +117,15 @@ void update(){
 		LINEAR_SPEED.y * 𝚫time * w_KEY * direction,
 		LINEAR_SPEED.z * 𝚫time * s_KEY * direction,
 	};
+	
 
-	testSPHERE.center = translate3(testSPHERE.center, translation);
-	for(int i = 0;i<testSPHERE.accuracy.x; i++){
-		for(int k = 0; k < testSPHERE.accuracy.y; k++){
-			testSPHERE.circles[i].points[k] = rotate3(testSPHERE.circles[i].points[k], testSPHERE.center ,angle);
-			testSPHERE.circles[i].points[k] = translate3(testSPHERE.circles[i].points[k] , translation);
-		}
-	}
-	updateSphere(&testSPHERE);
+	testCUBOID.center = translate3(testCUBOID.center, translation);
+		for(int k = 0; k < CUBOID_VERTICES_NO; k++){
+			testCUBOID.vertices[k] = rotate3(testCUBOID.vertices[k], testCUBOID.center ,angle);
+			testCUBOID.vertices[k] = translate3(testCUBOID.vertices[k] ,translation);
+		}	
+	updateCuboid(&testCUBOID);
+	
 	return;
 }
 

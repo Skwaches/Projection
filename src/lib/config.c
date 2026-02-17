@@ -5,7 +5,7 @@ bool LIMIT_FPS = false;
 #define FPS 200
 float WAIT_TIME = 1000.0/FPS;
 
-SDL_Point WINDOW_SIZE = {1920, 1080};
+SDL_Point WINDOW_SIZE = {2560,1440};
 SDL_Color BACKGROUND = {0, 0 , 0, SDL_ALPHA_OPAQUE};
 SDL_WindowFlags WINDOW_FLAGS = SDL_WINDOW_FULLSCREEN;
 const char* WINDOW_TITLE = "Cartesian";
@@ -28,13 +28,13 @@ Cuboid testCUBOID = {
 
 Circle testCIRCLE = {
 	.center = { 0, 0, 20},
-	.accuracy = 1000,
+	.accuracy = 10,
 	.radius = 5
 };
 
 Sphere testSPHERE = {
 	.center = {0, 0, 20},
-	.accuracy = {10, 500},
+	.accuracy = {30, 10000},
 	.radius = 3
 };
 
