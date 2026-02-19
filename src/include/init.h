@@ -37,6 +37,8 @@ extern Cuboid testCUBOID;
 extern Circle testCIRCLE;
 extern Sphere testSPHERE;
 
+//Coordinates
+extern Vector3 CAMERA;
 //Speed
 extern Vector3 ANGULAR_VELOCITY;
 extern Vector3 LINEAR_SPEED;

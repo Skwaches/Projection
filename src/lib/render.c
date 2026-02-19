@@ -5,10 +5,6 @@ bool setColor(SDL_Color color){
 	return SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
 }
 
-SDL_FColor convertToFColor(SDL_Color color){
-	return (SDL_FColor){(float)color.r/255.0, (float)color.g/255.0,  (float)color.g/255.0,  (float)color.a/255.0};
-}
-
 bool renderCuboidEdges( SDL_FPoint vertices[CUBOID_VERTICES_NO] ){
 	Line lines[CUBOID_EDGES_NO];
 	for(int i = 0; i < CUBOID_EDGES_NO; i++){
@@ -56,9 +52,7 @@ void sortInts(float* numbers, int count, int* result){
 		}
 	}
 }
-void printPoint(Vector3 point){
-	SDL_Log("(%f, %f, %f)", point.x, point.y, point.x);
-}
+
 void cuboidFaceBuffer(Vector3 points[CUBOID_VERTICES_NO], int order[magic]){
 	/* Give points weight and sum the weight for each face then order them according to the weights
 	 * Heavier points are rendered first
@@ -146,6 +140,74 @@ bool renderCuboidFaces ( SDL_FPoint vertices[CUBOID_VERTICES_NO], int* order, SD
 	return true;
 } 
 
+//Converts a sphere to rectangles.
+//Then to triangles
+int squaresSphere(Sphere sphere, SDL_Vertex** vertexes,SDL_FColor baseColor, float gradient){
+	int count = 0;
+	//This misses one pair of circles
+	for(int i = 0; i < sphere.accuracy.x; i++){
+		int i_next    = (i + 1) % sphere.accuracy.x,
+			i_current = i % sphere.accuracy.x ; 
+		//These 2 circles' point will be paired together to form rectangles, which can easily be broken into triangles
+		Circle circle1 = sphere.circles[i_current],
+			   circle2 = sphere.circles[i_next];
+
+		// One circle pair seems to be missing
+		for(int j = 0; j < sphere.accuracy.y; j++)
+		{
+			SDL_FColor color = baseColor;
+			float depthUNIT = 0;
+			bool visible = true;
+
+			int j_next = ( j+1 ) % sphere.accuracy.y,
+				j_current = j % sphere.accuracy.y;
+
+			Vector3 points[4] =  {
+ 				circle2.points[j_next],
+ 				circle1.points[j_next],
+ 				circle1.points[j_current],
+ 				circle2.points[j_current],
+			};
+
+			SDL_FPoint face[4] =  {
+				circle2.projection[j_next],
+				circle1.projection[j_next],
+				circle1.projection[j_current],
+				circle2.projection[j_current],
+			};
+
+			for (int i = 0; i < 4; i++){
+				if( sphere.center.z - points[i].z  < 0){
+					// Point is on the other half of the sphere!
+					// This assumes camera is at (0,0,0)
+					visible = false;
+					break;
+				}
+				depthUNIT += points[i].z ;
+			}
+
+			if (!visible)
+				continue;
+			
+			depthUNIT/=4.0f;
+			depthUNIT=(sphere.center.z-depthUNIT)/sphere.radius;
+			depthUNIT=SDL_pow(depthUNIT, gradient);
+			color.r = depthUNIT;
+			color.b += depthUNIT;
+			color.g += depthUNIT;
+
+			for( int k = 0; k < magic; k++){
+				vertexes[count][k] = (SDL_Vertex){
+					.position = face[FACE_ORDER[k]],
+					.color = color
+				};
+			}
+			count++;
+		}
+	}
+	return count;
+}
+
 bool render(){
 	if(!setColor(BACKGROUND))
 		return false;
@@ -161,10 +223,26 @@ bool render(){
 		{1, 0, 1, 1},
 		{0, 1, 1, 1},
 	};
+	/*
 	int depthBuffer[magic];
 	cuboidFaceBuffer(testCUBOID.vertices, depthBuffer);
 	renderCuboidFaces(testCUBOID.projection, depthBuffer, faceColors);
+	*/
+	
+	int rectsNO = (testSPHERE.accuracy.y-1) * (testSPHERE.accuracy.x-1) + 1000;
+	SDL_Vertex** vertexes = SDL_malloc(sizeof(SDL_Vertex*) * rectsNO);
+	for(int i = 0; i < rectsNO; i++)
+		vertexes[i] = SDL_malloc( sizeof(SDL_Vertex) * magic );
+	SDL_FColor baseColor= {1.00, 0.80, 0.45, 1}; 
 
+	int count = squaresSphere(testSPHERE, vertexes, baseColor, 9 );
+	for(int i = 0; i < count; i++)
+		SDL_RenderGeometry(renderer, NULL, vertexes[i], magic, NULL, 0);
+
+	for(int i = 0; i < rectsNO; i++)
+		 SDL_free(vertexes[i]);
+	SDL_free(vertexes);
+	
 	if(!SDL_RenderPresent(renderer))
 		return false;
 	return true;

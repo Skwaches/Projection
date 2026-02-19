@@ -35,7 +35,7 @@ void initSphere(Sphere* sphere){
 		return;
 	}
 	sphere->circles = SDL_malloc(sizeof(Circle) * sphere->accuracy.x);
-	float angle = SDL_PI_F/sphere->accuracy.x;
+	float angle = 2* SDL_PI_F/sphere->accuracy.x;
 	float currentAngle = angle;
 
 	sphere->circles[0].radius = sphere->radius;
@@ -73,3 +73,4 @@ void destroySphere(Sphere* sphere){
 	}
 	SDL_free(sphere->circles);
 }
+

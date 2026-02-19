@@ -11,6 +11,7 @@ SDL_WindowFlags WINDOW_FLAGS = SDL_WINDOW_FULLSCREEN;
 const char* WINDOW_TITLE = "Cartesian";
 SDL_Color lineColor = {230, 77, 228, SDL_ALPHA_OPAQUE};
 
+Vector3 CAMERA = {0, 0, 0};
 //Used as radians/second
 //Planes are xy, xz and zy
 //Note 1 = /180 radians
@@ -29,13 +30,13 @@ Cuboid testCUBOID = {
 Circle testCIRCLE = {
 	.center = { 0, 0, 20},
 	.accuracy = 10,
-	.radius = 5
+	.radius = 5 
 };
 
 Sphere testSPHERE = {
 	.center = {0, 0, 20},
-	.accuracy = {30, 10000},
-	.radius = 3
+	.accuracy = {30, 100},
+	.radius = 5
 };
 
 void frameOne(void){

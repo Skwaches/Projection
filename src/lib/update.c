@@ -40,13 +40,6 @@ SDL_FPoint rotate2(SDL_FPoint point, SDL_FPoint origin, float angle){
 	return rotated;
 }
 
-//Rotate a point about an axis
-//Axis is defined by a vector and a point(mark) through which it passes through
-Vector3 rotateAxis3(Vector3 point, Vector3 line, Vector3 mark, float angle){
-	Vector3 meet; //Meeting point of axis and a line perpendicular to it passing through "point"
-	return mark;
-}
-
 //Planes are xy, xz and zy 
 //FIXME Splitting rotation for each plane may be cleaner. Doesn't bother me either way
 Vector3 rotate3(Vector3 point, Vector3 origin, Vector3 angle){
@@ -80,7 +73,7 @@ Vector3 rotate3(Vector3 point, Vector3 origin, Vector3 angle){
 //If you wish to do something to a point I suggest doing it BEFORE projecting it.
 SDL_FPoint projection(Vector3 point){
 	if(point.z == 0)
-		return (SDL_FPoint){point.x, point.y};
+		return (SDL_FPoint){-999999.0f, -999999.0f};
 	return (SDL_FPoint){ (point.x/point.z) , (point.y/point.z) };
 }
 
@@ -117,15 +110,25 @@ void update(){
 		LINEAR_SPEED.y * 𝚫time * w_KEY * direction,
 		LINEAR_SPEED.z * 𝚫time * s_KEY * direction,
 	};
+	/*
+	for (int k = 0; k < CUBOID_VERTICES_NO; k++) 
+	{
+		testCUBOID.vertices[k] = translate3(testCUBOID.vertices[k], translation);
+		testCUBOID.vertices[k] = rotate3(testCUBOID.vertices[k], testCUBOID.center, angle);
+	}
+	updateCuboid(&testCUBOID);
+*/
+	
+	testSPHERE.center = translate3(testSPHERE.center, translation);
+	for (int i = 0; i < testSPHERE.accuracy.x; i++)
+		for (int k = 0; k < testSPHERE.accuracy.y; k++)
+		{
+			testSPHERE.circles[i].points[k] = translate3(testSPHERE.circles[i].points[k], translation);
+			testSPHERE.circles[i].points[k] = rotate3(testSPHERE.circles[i].points[k], testSPHERE.center, angle);
+		}
+	updateSphere(&testSPHERE);
 	
 
-	testCUBOID.center = translate3(testCUBOID.center, translation);
-		for(int k = 0; k < CUBOID_VERTICES_NO; k++){
-			testCUBOID.vertices[k] = rotate3(testCUBOID.vertices[k], testCUBOID.center ,angle);
-			testCUBOID.vertices[k] = translate3(testCUBOID.vertices[k] ,translation);
-		}	
-	updateCuboid(&testCUBOID);
-	
 	return;
 }
 
