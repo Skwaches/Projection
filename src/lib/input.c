@@ -12,10 +12,13 @@ bool w_KEY = false;
 
 bool lShift_KEY = false;
 
+bool INPUT_RECEIVED = false;
+
 void handleKeyDown(SDL_Keycode key){
 	switch(key){
 		case SDLK_H:
 			h_KEY = true;
+			SDL_Log("%f", CURRENT_FPS);
 			break;
 		case SDLK_J:
 			j_KEY = true;
@@ -84,7 +87,9 @@ void handleKeyUp(SDL_Keycode key){
 }
 void input(void){
 	SDL_Event event;
+	INPUT_RECEIVED = false;
 	while(SDL_PollEvent(&event)){
+		INPUT_RECEIVED = true;
 		switch(event.type){
 			case SDL_EVENT_QUIT:
 				RUNNING = false;

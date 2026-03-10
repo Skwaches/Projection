@@ -1,26 +1,6 @@
 #include "init.h"
-#include "update.h"
 
-bool setColor(SDL_Color color){
-	return SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-}
-
-bool renderCuboidEdges( SDL_FPoint vertices[CUBOID_VERTICES_NO] ){
-	Line lines[CUBOID_EDGES_NO];
-	for(int i = 0; i < CUBOID_EDGES_NO; i++){
-		lines[i] = (Line){
-			.a = vertices[ CUBOID_EDGES[i][0] ], 
-				.b = vertices[ CUBOID_EDGES[i][1] ], 
-				.color = (SDL_FColor){0,0,1,1},
-				.thickness = 2
-		};
-		initLINE(&lines[i]);
-		if(!SDL_RenderGeometry(renderer, NULL, lines[i].vertexes, LINE_VERTICES_NO, LINE_PATH_TRIANGLE_INDICES, LINE_PATH_TRIANGLE_NO)){
-			SDL_Log("\n Rendering Error: %s", SDL_GetError());
-			return false;
-		}
-	}
-	return true;
+bool setColor(SDL_Color color){ return SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
 }
 
 #define magic 6
@@ -140,81 +120,79 @@ bool renderCuboidFaces ( SDL_FPoint vertices[CUBOID_VERTICES_NO], int* order, SD
 	return true;
 } 
 
+int cylinderConnect(Circle* circle1, Circle* circle2, SDL_Vertex* vertices, SDL_FColor baseColor){	
+	int count = 0;
+	int index = 0;
+	if(!circle1 || !circle2 || !vertices){
+		SDL_Log("Null occurence!");
+		return 0;
+	}
+	if(circle1->accuracy != circle2->accuracy){
+		SDL_Log("Circles must match");
+		return 0;
+	}
+
+	while(index < circle1->accuracy){
+		int next = (index + 1) %circle2->accuracy;
+		SDL_FPoint face[4] = {
+			circle1->projections[index].position,
+			circle2->projections[index].position,
+			circle2->projections[next].position,
+			circle1->projections[next].position,
+		};
+		index++;
+		for(int i = 0; i < magic; i++){
+			int id = FACE_ORDER[i];
+			vertices[count++] = (SDL_Vertex){
+				.position = face[id],
+				.color = baseColor
+			};
+		}
+	}
+
+	return count;
+}
+
+//Connect the points of a circle to a point in space.
+//This doesn't return a list of indices because the point is assumed to not be part of the list.
+int connectPia(Circle* circle, SDL_FPoint* point, SDL_Vertex* vertex, SDL_FColor color){
+	int count = 0;
+	if(!circle || !point || !vertex){
+		SDL_Log("Null occurence : connectPia");
+		return 0;
+	}
+	for(int i = 0; i < circle->accuracy; i++){
+		int next = i + 1 % circle->accuracy;
+		SDL_FPoint points[3] = {
+			*point,
+			circle->projections[i].position,
+			circle->projections[next].position,
+		};
+		for(int j = 0; j < 3; j++)
+			vertex[count++] = (SDL_Vertex) {.position = points[j], .color = color};
+	}
+	return count;
+}
+
 //Converts a sphere to rectangles.
 //Then to triangles
-int squaresSphere(Sphere sphere, SDL_Vertex** vertexes,SDL_FColor baseColor, float gradient){
+int fillSphere(Sphere *sphere, SDL_Vertex* vertexes, SDL_FColor baseColor){
 	int count = 0;
-	//This misses one pair of circles
-	for(int i = 0; i < sphere.accuracy.x; i++){
-		int i_next    = (i + 1) % sphere.accuracy.x,
-			i_current = i % sphere.accuracy.x ; 
-		//These 2 circles' point will be paired together to form rectangles, which can easily be broken into triangles
-		Circle circle1 = sphere.circles[i_current],
-			   circle2 = sphere.circles[i_next];
+	//Top pole and first concentric circle.
+	//And bottom pole with last concentric circle.
 
-		// One circle pair seems to be missing
-		for(int j = 0; j < sphere.accuracy.y; j++)
-		{
-			SDL_FColor color = baseColor;
-			float depthUNIT = 0;
-			bool visible = true;
-
-			int j_next = ( j+1 ) % sphere.accuracy.y,
-				j_current = j % sphere.accuracy.y;
-
-			Vector3 points[4] =  {
- 				circle2.points[j_next],
- 				circle1.points[j_next],
- 				circle1.points[j_current],
- 				circle2.points[j_current],
-			};
-
-			SDL_FPoint face[4] =  {
-				circle2.projection[j_next],
-				circle1.projection[j_next],
-				circle1.projection[j_current],
-				circle2.projection[j_current],
-			};
-
-			for (int i = 0; i < 4; i++){
-				if( sphere.center.z - points[i].z  < 0){
-					// Point is on the other half of the sphere!
-					// This assumes camera is at (0,0,0)
-					visible = false;
-					break;
-				}
-				depthUNIT += points[i].z ;
-			}
-
-			if (!visible)
-				continue;
-			
-			depthUNIT/=4.0f;
-			depthUNIT=(sphere.center.z-depthUNIT)/sphere.radius;
-			depthUNIT=SDL_pow(depthUNIT, gradient);
-			color.r = depthUNIT;
-			color.b += depthUNIT;
-			color.g += depthUNIT;
-
-			for( int k = 0; k < magic; k++){
-				vertexes[count][k] = (SDL_Vertex){
-					.position = face[FACE_ORDER[k]],
-					.color = color
-				};
-			}
-			count++;
-		}
+	//Connect the other concentric circles
+	for( int o = 0; o < sphere->count - 1; o++){
+		int number = cylinderConnect(&sphere->circles[o], &sphere->circles[o+1], &vertexes[count], baseColor);
+		count+=number;
 	}
 	return count;
 }
 
 bool render(){
-	if(!setColor(BACKGROUND))
-		return false;
-	if(!SDL_RenderClear(renderer))
-		return false;
-
-	setColor(lineColor);
+	SDL_CHECK(setColor(BACKGROUND));
+	SDL_CHECK(SDL_RenderClear(renderer));
+	SDL_CHECK(setColor(lineColor));
 	SDL_FColor faceColors[6] = {
 		{1, 0, 0, 1},
 		{0, 1, 0, 1},
@@ -223,28 +201,44 @@ bool render(){
 		{1, 0, 1, 1},
 		{0, 1, 1, 1},
 	};
-	/*
-	int depthBuffer[magic];
-	cuboidFaceBuffer(testCUBOID.vertices, depthBuffer);
-	renderCuboidFaces(testCUBOID.projection, depthBuffer, faceColors);
-	*/
 	
-	int rectsNO = (testSPHERE.accuracy.y-1) * (testSPHERE.accuracy.x-1) + 1000;
-	SDL_Vertex** vertexes = SDL_malloc(sizeof(SDL_Vertex*) * rectsNO);
-	for(int i = 0; i < rectsNO; i++)
-		vertexes[i] = SDL_malloc( sizeof(SDL_Vertex) * magic );
-	SDL_FColor baseColor= {1.00, 0.80, 0.45, 1}; 
+	static Uint64 accumulated = 0, lastFrameTime = 0;
+	Uint64 maxTime = 100;
+	Uint64 delay = 1000;
+	static bool wait =false;
+	Uint64 currentFrameTime = SDL_GetTicks();
 
-	int count = squaresSphere(testSPHERE, vertexes, baseColor, 9 );
-	for(int i = 0; i < count; i++)
-		SDL_RenderGeometry(renderer, NULL, vertexes[i], magic, NULL, 0);
+	accumulated += lastFrameTime ? currentFrameTime - lastFrameTime: 0;
+	lastFrameTime = currentFrameTime;
 
-	for(int i = 0; i < rectsNO; i++)
-		 SDL_free(vertexes[i]);
-	SDL_free(vertexes);
-	
-	if(!SDL_RenderPresent(renderer))
-		return false;
+	if(wait){
+		wait = accumulated < delay;
+		if(!wait)
+			accumulated = 0;
+	}
+
+	static int index = 0;
+	if( !wait && accumulated >= maxTime ){
+		accumulated = 0;
+		index ++;
+		if( index == testSPHERE.count - 1){
+			wait = true;
+			goto end;	
+		}
+		index %= testSPHERE.count - 1;
+	}
+	for(int i = 0; i < testSPHERE.count; i++){
+		for(int j = 0; j < testSPHERE.accuracy.y; j++){
+			int next_j = (j+1) % testSPHERE.accuracy.y;
+			SDL_RenderLine(
+					renderer, 
+					testSPHERE.circles[i].projections[j].position.x,      testSPHERE.circles[i].projections[j].position.y,
+					testSPHERE.circles[i].projections[next_j].position.x, testSPHERE.circles[i].projections[next_j].position.y
+					);
+		}
+	}
+end:;
+	SDL_CHECK(SDL_RenderPresent(renderer));
 	return true;
 }
 
