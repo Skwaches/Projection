@@ -3,9 +3,7 @@
 
 //FPS
 #define FPS 200
-bool LIMIT_FPS = true;
-float CURRENT_FPS = FPS;
-float WAIT_TIME = 1000.0/FPS;
+bool LIMIT_FPS = false; float CURRENT_FPS = FPS; float WAIT_TIME = 1000.0/FPS;
 
 //Window
 SDL_Point WINDOW_SIZE = {2560,1440};
@@ -14,10 +12,14 @@ const char* WINDOW_TITLE = "Cartesian";
 
 //Colors
 SDL_Color BACKGROUND = {0, 0 , 0, SDL_ALPHA_OPAQUE};
-SDL_Color lineColor = {230, 77, 228, SDL_ALPHA_OPAQUE};
+SDL_Color lineColor = {255, 0, 0, SDL_ALPHA_OPAQUE};
 
 // Coordinates
-Vector3 USER_CAMERA = {0, 0, 0};
+Camera MAIN_CAMERA = { 
+	.position = {0,0,0},
+	.focal = 1,
+	.rotation= { 0, 0}
+};
 
 //// SPEEDS
 //Used as radians/second
@@ -26,11 +28,11 @@ Vector3 USER_CAMERA = {0, 0, 0};
 #define DEGREE SDL_PI_D/180 
 SDL_FPoint ANGULAR_VELOCITY = {DEGREE * 90, DEGREE*90};
 // Speed is in pixels per second
-Vector3 LINEAR_SPEED = { 9, 9, 9};
+Vector3 LINEAR_SPEED = { 19, 19, 19};
 
 //Rendering 
-int GLOBAL_MAX_ITEMS = 32768; //2**15 //This should fit("Probably")
-int GLOBAL_FREE_ID = 0; //This is the index of the first available free spot. No item is at this index
+int GLOBAL_MAX_POINTS = 262144 * 2; //2**19 //This should fit("Probably")
+int GLOBAL_MAX_OBJECTS = 10;
 
 //Test Objects
 Cuboid testCUBOID = { 
@@ -39,33 +41,36 @@ Cuboid testCUBOID = {
 };
 
 Circle testCIRCLE = {
-	.center = { 0, 0, 20},
-	.accuracy = 10,
-	.radius = 5 
+	.center = {0,0.5,3},
+	.accuracy = 100,
+	.radius = 1 ,
+	.color = {1, 1, 1, 0},
+	.origin = {0,0,3}
 };
 
 Sphere testSPHERE = {
-	.center = {0, 0, 5},
-	.accuracy = { 20, 100 },
-	.radius = 2
+	.center = {0, 0, 3},
+	.accuracy = { 100, 100},
+	.radius = 2,
+	.color = {255, 0, 0, 1}
+};
+
+Light testLIGHT = {
+	.power = 0,
+	.position = {0, 0, 0},
+	.color = {1, 1, 1, 0}
 };
 
 //It is called with the init function.
 bool frameOne(void){
-	GLOBAL_POINTS = SDL_malloc(GLOBAL_MAX_ITEMS * sizeof(Vector3));
-	GLOBAL_PROJECTIONS = SDL_malloc(GLOBAL_MAX_ITEMS * sizeof(SDL_Vertex));
-	if(!GLOBAL_POINTS || !GLOBAL_PROJECTIONS)
-		return false;
-	
-	SDL_GetWindowSize(window, &WINDOW_SIZE.x, &WINDOW_SIZE.y);
-	initCuboid(&testCUBOID);
-	initCircle(&testCIRCLE);
+	SDL_CHECK(SDL_GetWindowSize(window, &WINDOW_SIZE.x, &WINDOW_SIZE.y));
+	MAIN_CAMERA.cosSin1 = (SDL_FPoint){ SDL_cosf(MAIN_CAMERA.rotation.x), SDL_sinf(MAIN_CAMERA.rotation.x)};
+	MAIN_CAMERA.cosSin2 = (SDL_FPoint){ SDL_cosf(MAIN_CAMERA.rotation.y), SDL_sinf(MAIN_CAMERA.rotation.y)};
 	initSphere(&testSPHERE);
 	return true;
 }
 
 void frameLast(void){
-	SDL_free(testCIRCLE.points);
-	SDL_free(testCIRCLE.projection);
-	destroySphere(&testSPHERE);
+	SDL_Log("%d points were used!", GLOBAL_FREE_INDEX);
+	SDL_Log("Freeing memory...");
 }

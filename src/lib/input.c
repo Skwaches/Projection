@@ -18,7 +18,6 @@ void handleKeyDown(SDL_Keycode key){
 	switch(key){
 		case SDLK_H:
 			h_KEY = true;
-			SDL_Log("%f", CURRENT_FPS);
 			break;
 		case SDLK_J:
 			j_KEY = true;

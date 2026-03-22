@@ -26,20 +26,4 @@ Vector3 centerCuboid(Cuboid cube){
 	return center;
 }
 
-void updateCuboid(Cuboid* cube, Vector3 *translation, Vector3 *origin, SDL_FPoint *angle){
-	cube->center = centerCuboid(*cube);
-
-	for(int i = 0; i < CUBOID_VERTICES_NO; i++){
-		if(translation)
-			cube->points[i] = translate3(cube->points[i], *translation);
-		if(angle && origin)
-			cube->points[i] = rotate3(cube->points[i], *origin, *angle);
-		SDL_FPoint projected = projection(cube->points[i]);
-		cube->projection[i].position = convertScreen(projected);
-	}
-}
-void initCuboid(Cuboid* cube){
-	vertexes(cube->points, cube->topBackLeft, cube->dimensions);
-	updateCuboid(cube, NULL, NULL, NULL);
-}
 

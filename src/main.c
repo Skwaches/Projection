@@ -1,4 +1,3 @@
-%:include <SDL3/SDL.h>
 %:include "update.h"
 %:include "init.h"
 

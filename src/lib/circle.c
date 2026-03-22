@@ -1,88 +1,104 @@
 #include "update.h"
 #include "init.h"
 
-//Allocates memory. Remember to free!
-void initCircle(Circle* circle){
-	if(!circle){
-		SDL_Log("Circle object passed to be initialised is NULL!");
-		return;
-	}
-	circle->points = &GLOBAL_POINTS[GLOBAL_FREE_ID];
-	float angle = 2*SDL_PI_F/circle->accuracy;
+/*
+ * Kindly note that this function adds the point of a circle to the GLOBAL_POINTS array, every time it is called.
+ * It modifies the value of GLOBAL_FREE_INDEX!
+*/
+void initCirclePoints(Vector3 center, float radius, int accuracy){
+	float angle = 2*SDL_PI_F/accuracy;
 	float currentAngle = 0;
-
-	for(int i =0; i < circle->accuracy; i++){
+	for(int i = 0; i < accuracy; i++){
 		Vector3 translation = {SDL_cosf(currentAngle), 0, SDL_sinf(currentAngle)};
-		translation = scale3(translation, circle->radius);
-		circle->points[i]= translate3(circle->center,translation);
+		translation = scale3(translation, radius);
+		GLOBAL_POINTS[i + GLOBAL_FREE_INDEX] = translate3(center,translation);
+		GLOBAL_OBJECT_MAPPING[ i + GLOBAL_FREE_INDEX ] = GLOBAL_FREE_OBJECT_INDEX;
 		currentAngle += angle;
-		++GLOBAL_FREE_ID;
 	}
+	GLOBAL_FREE_INDEX+= accuracy;
 }
+	
+void initCircle(Circle* circle){
+	if(!circle)
+		SDL_Log("Error: Circle object passed is NULL!");
+	SPACE_CHECK(circle->accuracy);
+	if(!RUNNING)
+		return;
 
-//Highest point and Lowest point are not counted in accuracy.
-//Concentric circles will be drawn top to bottom.
-//Equator is forced
-//accuracy.x are the concentric circles in one hemisphere
-//Concentric circle start from the highest y value downwards
+	circle->points = &GLOBAL_POINTS[GLOBAL_FREE_INDEX];
+	circle->projections = &GLOBAL_PROJECTIONS[GLOBAL_FREE_INDEX];
+	circle->id = GLOBAL_FREE_OBJECT_INDEX;
+
+	GLOBAL_OBJECTS[GLOBAL_FREE_OBJECT_INDEX]= (ObjectProperties){
+		.color = circle->color,
+		.translation = {0, 0, 0},
+		.rotation = circle->rotation,
+		.origin = circle->origin,
+	};
+
+	circle->points[0] = circle->center;
+	GLOBAL_OBJECT_MAPPING[GLOBAL_FREE_INDEX++] = GLOBAL_FREE_OBJECT_INDEX;
+	initCirclePoints(circle->center, circle->radius, circle->accuracy -1);
+	GLOBAL_FREE_OBJECT_INDEX++;
+
+}
+/* Highest point and Lowest point are not counted in accuracy.
+ * Concentric circles will be drawn top to bottom.
+ * Equator is forced
+ * accuracy.x are the concentric circles in one hemisphere
+ * Concentric circle start from the highest y value downwards
+*/
 void initSphere(Sphere* sphere){
 	if(!sphere){
 		SDL_Log("Error: Sphere object passed is NULL!");
 		return;
 	}
-	Vector3 topPole = {0, sphere->center.y + sphere->radius, 0};
-	Vector3 bottomPole =  {0, sphere->center.y - sphere->radius, 0};
-	float rise = sphere->radius/(float)(sphere->accuracy.x + 1); //To have _equidistant_ concentric circles.
-	float height = sphere->radius - rise;
-	float R_squared = SDL_pow(sphere->radius, 2);
-	sphere->points[0] = topPole;
-	sphere->points[1] = bottomPole;
-														
-	int count = 0; 
+	int concentricMAX =  sphere->accuracy.x * 2 + 1;
+ 	//Number of point the sphere will have
+ 	sphere->count = concentricMAX * sphere->accuracy.y + 2;
+	SPACE_CHECK(sphere->count);
+	if(!RUNNING)
+		return;
+
+	GLOBAL_OBJECTS[GLOBAL_FREE_OBJECT_INDEX]= (ObjectProperties){
+		.color = sphere->color,
+		.translation = {0, 0, 0},
+		.rotation = {0, 0},
+		.origin = sphere->center
+	};
+	
+	//Assign the sphere's pointer the current end point of the list.
+	sphere->points = &GLOBAL_POINTS[GLOBAL_FREE_INDEX];
+	sphere->projections = &GLOBAL_PROJECTIONS[GLOBAL_FREE_INDEX];
+
+	for(int i = 0; i < sphere->count; i++){
+		sphere->projections[i].color = sphere->color;
+	}
+
+	sphere->points[0] = (Vector3){sphere->center.x, sphere->center.y + sphere->radius, sphere->center.z}; //Top pole
+	GLOBAL_OBJECT_MAPPING[GLOBAL_FREE_INDEX++] = 0;
+
+	float angle_Delta = (SDL_PI_F/2) / (sphere->accuracy.x + 1); //Uniform angle difference
+	float angle = SDL_PI_F/2 - angle_Delta;
+
+	//This counts the concentric circles
 	//Keeps track of index. 0 is the highest concentric circle. 
-	//Closest to poles[0]. It moves downwards.
-	//Max is expected to be sphere->accuracy.x * 2 + 1
-	//This part does the top half and the equator.
-	while( count <= sphere->accuracy.x ){
-		Circle* circle = &sphere->circles[count];
+	int concentricCircleIndex = 0;  
+
+	while( concentricCircleIndex < concentricMAX){
+		float height = sphere->radius * SDL_sinf(angle);
+	    float radius = sphere->radius * SDL_cosf(angle);
+
 		Vector3 translation = {0, height, 0};
-		float h_squared = SDL_pow(height, 2);
-
-		circle->center = translate3(sphere->center, translation);
-	    circle->radius = SDL_pow(R_squared - h_squared, 0.5);
-		circle->accuracy = sphere->accuracy.y;
-		initCircle(circle);
-		count++;
-		height-=rise;
-	}
-	int reflected = sphere->accuracy.x - 1;
-	height = rise;
-	while( reflected >= 0 ){
-		Circle* originalCircle = &sphere->circles[reflected--];
-		Circle* reflectedCircle = &sphere->circles[count++];
-
-		Vector3 translation = {0, -height * 2, 0};
-		reflectedCircle->center = translate3(originalCircle->center, translation);
-		reflectedCircle->radius = originalCircle->radius;
-		reflectedCircle->accuracy = sphere->accuracy.y;
-
-		reflectedCircle->points = SDL_malloc( sizeof(Vector3) * sphere->accuracy.y);
-		reflectedCircle->projections = SDL_malloc( sizeof(SDL_Vertex) * sphere->accuracy.y);
-
-		for(int i = 0; i < sphere->accuracy.y; i++){
-			reflectedCircle->points[i] = translate3(originalCircle->points[i], translation);
-		}
-		height+=rise;
+		Vector3 center = translate3(sphere->center, translation);
+		initCirclePoints(center, radius, sphere->accuracy.y);
+		angle-=angle_Delta;
+		concentricCircleIndex++;
 	}
 
-	sphere->count = count;
+	sphere->points[GLOBAL_FREE_INDEX] = (Vector3){sphere->center.x, sphere->center.y - sphere->radius, sphere->center.z}; //Bottom pole
+	GLOBAL_OBJECT_MAPPING[GLOBAL_FREE_INDEX++] = GLOBAL_FREE_OBJECT_INDEX;
+	++GLOBAL_FREE_OBJECT_INDEX;
 }
 
-void destroySphere(Sphere* sphere){
-	for ( int i = 0; i < sphere->count; i++){
-		SDL_free(sphere->circles[i].points);
-		SDL_free(sphere->circles[i].projections);
-	}
-	SDL_free(sphere->circles);
-}
 
