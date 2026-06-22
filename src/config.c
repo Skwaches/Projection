@@ -50,7 +50,7 @@ Circle testCIRCLE = {
 
 Sphere testSPHERE = {
 	.center = {0, 0, 3},
-	.accuracy = { 100, 100},
+	.accuracy = { 800, 100},
 	.radius = 2,
 	.color = {255, 0, 0, 1}
 };

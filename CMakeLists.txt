@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 4.2 )
-project(projection LANGUAGES C CXX CUDA)
+project(projection LANGUAGES C CUDA)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(VENDOR_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../.Vendor)
@@ -13,29 +13,32 @@ else()
 endif()
 
 # Create executable
-set(exe_Name ${PROJECT_NAME})
-add_executable(${exe_Name} src/main.c)
+set(executable ${PROJECT_NAME})
 
 # Make library from files
-file(GLOB cFiles ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/*c)
-file(GLOB cudaFiles ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/*cu)
-add_library(promise ${cFiles} ${cudaFiles} )
+add_executable(${executable}
+	src/main.c
+	src/circle.c
+	src/config.c
+	src/cuboid.c
+	src/render.c
+	src/update.c
+	src/update.cu
+	src/init.c
+	src/input.c
+)
+
+# Guide include search
+target_include_directories( ${executable} 
+	PUBLIC
+	${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # We need to explicitly state that we need all CUDA files in the 
 # promise library to be built with -dc as the member functions 
 # could be called by other libraries and the executable
-set_target_properties(promise PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
-
-#Link libs to main library.
-target_link_libraries(
-	promise
-	PUBLIC
-	SDL3::SDL3
-)
-# Guide include search
-target_include_directories(promise PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/include)
+set_property(TARGET ${executable} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 
 # Link main library to exe_Name
-target_link_libraries(${exe_Name} PRIVATE promise)
+target_link_libraries(${executable} PRIVATE SDL3::SDL3)
 
 
